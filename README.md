@@ -53,4 +53,29 @@ also can report and analysis lost.
   ```
 
 ## Application Usage
-**
+
+**Application Detail**
+
+
+
+
+
+
+
+
+**Change Database in settings.py**
+```
+'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'orboard', 
+        'USER': 'postgres', 
+        PASSWORD': 'postgres',
+        'HOST': '127.0.0.1', 
+        'PORT': '5432',
+```
+after change Database run
+```
+  python manage.py makemigrations
+  python manage.py migrate
+```
+
+
