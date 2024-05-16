@@ -55,13 +55,25 @@ also can report and analysis lost.
 ## Application Usage
 
 **Application Detail**
+**Home Page**
 ![alt text](https://github.com/turtlejrp/django_orboard/blob/main/Picture/home.png)
+Feature
+- Can see detail of production in hour,shift,day
+- Calculate realtime Operation ratio
 
 
+**Loss Report**
+![alt text](https://github.com/turtlejrp/django_orboard/blob/main/Picture/LossReport.png)
+Feature
+- Report Loss in production detail
+- Generate Pareto chart for analysis Loss today
 
 
-
-
+**Loss Analysis**
+![alt text](https://github.com/turtlejrp/django_orboard/blob/main/Picture/LossAnalysis.png)
+Feature
+- Search Loss in detail of Loss type,date,shift
+- Generate Pareto chart for analysis Loss today
 
 **Change Database in settings.py**
 ```
