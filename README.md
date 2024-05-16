@@ -55,7 +55,7 @@ also can report and analysis lost.
 ## Application Usage
 
 **Application Detail**
-
+![alt text](https://github.com/turtlejrp/django_orboard/blob/main/Picture/home.png)
 
 
 
