@@ -1,0 +1,56 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="{% static 'dashboard/home.css' %}" />
+    <script src="{% static 'dashboard/chartnonet.js' %}"></script>
+    <script src="{% static 'dashboard/chartnonet2.js' %}"></script>
+    <script src="{% static 'dashboard/chartplugin.js' %}"></script>
+    <script src="{% static 'dashboard/stacked.js' %}"></script>
+    <script src="{% static 'dashboard/fontawesome.js' %}" ></script>
+    <title>OR Board</title>
+  </head>
+  <body>
+    {% block content %}
+    {% endblock %}
+  </body>
+  <script>
+    var date = new Date();
+
+      const ORdata = document.getElementById("ORdata");
+      const OutputDiff = document.getElementById("OutputDiff")
+      var or = {{OR_Actual}}
+      if (or > 82){
+        addGreenMode(ORdata)
+      }else{
+        addRedMode(ORdata)
+      }
+
+      var diff = {{OP_DIFF}}
+      if (diff >= 0){
+        addGreenMode(OutputDiff)
+      }else{
+        addRedMode(OutputDiff)
+      }
+
+      function addGreenMode(a) {
+        var status = a.classList.contains("greenStatus")
+        if(status){}
+        else{a.classList.add("greenStatus");
+        a.classList.remove("redStatus");
+      }
+    }
+
+      function addRedMode(a) {
+        var status = a.classList.contains("redStatus")
+        if(status){
+        }else{
+          a.classList.add("redStatus");
+          a.classList.remove("greenStatus");
+        }
+      }
+  </script>
+</html>

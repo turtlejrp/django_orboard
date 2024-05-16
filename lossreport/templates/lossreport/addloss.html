@@ -1,0 +1,58 @@
+{% extends 'dashboard/components/header.html' %}
+{% block content%}
+<body>
+    <div id="head-container">
+        <h1 id="Loss">Add Loss</h1>
+        <div class="head-right-container">
+          <a href="{% url 'lossreport' %}" class="ot-content"><i class="fa-solid fa-file-lines fa-3x"></i></a>
+          <a href="{% url 'orboardday' %}" class="ot-content"><i class="fa-solid fa-house fa-3x"></i></a>
+        </div>
+    </div>
+    <div>
+    
+      <div>
+        <form action = "" method = "post">
+          {% csrf_token %}
+          {{form.problem.label_tag}} {{form.problem}}
+          {{form.lossType.label_tag}} {{form.lossType}}
+          {{form.duration.label_tag}} {{form.duration}} <span class="min">Minutes</span> 
+          {{form.create_at_time.label_tag}} {{form.create_at_time}}
+          {{form.create_at_date.label_tag}} {{form.create_at_date}}
+          <button type="submit" class="button">Add Lost</button>
+          </form>
+      </div>
+    
+    <div class="grid-loss" style="grid-template-columns: 5fr;">
+        <div class="grid-losscontent">
+            <h5 id="loss-title">Pareto loss</h5>
+            {% include 'dashboard/components/paretoloss.html' %}
+        </div>
+    </div>
+    <div class="table_loss">
+        <table target="_loss" style="width:100%">
+          <thead target="_loss">
+            <tr target="_loss">
+              <th target="_loss" style="width:20%" scope="col">Worktime</th>
+              <th  target="_loss" style="width:5%" scope="col">Target</th>
+              <th  target="_loss" style="width:5%" scope="col">Actual</th>
+              <th  target="_loss" style="width:50%" scope="col">Problem</th>
+              <th  target="_loss" style="width:10%" scope="col">Duration(min)</th>
+              <th  target="_loss" style="width:10%" scope="col">%Loss</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for key,value in shifttime.items %}
+            <tr height="30px">
+              <th target="_loss" scope="row">{{value.time}}</th>
+              <td target="_loss">{{value.target}}</td>
+              <td target="_loss">{{value.actual}}</td>
+              <td target="_loss">{{value.problem}}</td>
+              <td target="_loss">{{value.duration}}</td>
+              <td target="_loss">{{value.loss_percent}}%</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+    </div>
+</body>
+  {% endblock%}

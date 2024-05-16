@@ -1,0 +1,70 @@
+{% extends 'dashboard/components/header.html' %}
+{% block content%}
+<body>
+    <div id="head-container">
+        <h1 id="Loss">Analyze Loss</h1>
+        <div class="head-right-container">
+          <a href="{% url 'lossreport' %}" class="ot-content"><i class="fa-solid fa-file-lines fa-3x"></i></a>
+          <a href="{% url 'orboardday' %}" class="ot-content"><i class="fa-solid fa-house fa-3x"></i></a>
+        </div>
+    </div>
+    <div>
+    
+      <div>
+        <form action = "/report/analyze" method = "post">
+          {% csrf_token %}
+          <label for="losstypr">LossType:</label>
+          <select name="losstype" id="losstype">
+          <option disabled="disabled" selected="selected">Select loss type</option>
+          <option value="part_supply">Part Supply</option>
+          <option value="defect">Defect</option>
+          <option value="breakdown">Breakdown</option>
+          <option value="short_stop">Short Stop</option>
+          <option value="changing">Changing</option>
+          </select>
+          <label for="shift">Shift:</label>
+          <select name="shift" id="shift">
+          <option value="all">All</option>
+          <option value="day">Day</option>
+          <option value="night">Night</option>
+          </select>
+          <label for="start_date">Start Date</label> <input type="date" name="start_date" value={{datedefault}} />
+          <label for="end_date">:</label> <input type="date" name="end_date" value={{datedefault}} />
+          <button type="submit" class="button">Search</button>
+          </form>
+      </div>
+    
+    <div class="grid-loss" style="grid-template-columns: 5fr;">
+        <div class="grid-losscontent">
+            <h5 id="loss-title">Pareto loss</h5>
+            {% include 'dashboard/components/paretoloss.html' %}
+        </div>
+    </div>
+    <div class="table_loss">
+        <table target="_loss" style="width:100%">
+          <thead target="_loss">
+            <tr target="_loss">
+              <th target="_loss" style="width:25%" scope="col">Problem</th>
+              <th  target="_loss" style="width:15%" scope="col">Problem Type</th>
+              <th  target="_loss" style="width:5%" scope="col">Type</th>
+              <th  target="_loss" style="width:10%" scope="col">Duration(mins)</th>
+              <th  target="_loss" style="width:20%" scope="col">Time</th>
+              <th  target="_loss" style="width:25%" scope="col">Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for lost in loss %}
+            <tr height="30px">
+              <th target="_loss" scope="row">{{lost.problem}}</th>
+              <td target="_loss">{{lost.get_lossType_display}}</td>
+              <td target="_loss">{{lost.ABCType}}</td>
+              <td target="_loss">{{lost.duration}}</td>
+              <td target="_loss">{{lost.get_create_at_time_display}}</td>
+              <td target="_loss">{{lost.create_at_date}}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+    </div>
+</body>
+  {% endblock%}

@@ -1,0 +1,62 @@
+{% load static %}
+<div id="chartContainer" style="height: 300px; width: 100%;"></div>
+<script src="{% static 'dashboard/canvas.js' %}"></script>
+<script>
+  window.onload = function () {
+  
+  var chart = new CanvasJS.Chart("chartContainer", {
+    backgroundColor: "rgba(0,0,0,0)",
+    axisX: {
+      labelFontWeight: 'bolder',
+      labelFontColor: "white",
+      labelFontSize: 20,
+      corderRadius:10,
+
+    },
+    axisY: {
+      title: "Duration (Minutes)",
+      titleFontWeight: 'bold',
+      labelFontColor: "white",
+      titleFontColor: "white"
+    },
+    axisY2: {
+      title: "Percent",
+      suffix: "%",
+      titleFontWeight: 'bold',
+      labelFontColor: "white",
+      titleFontColor: "white"
+    },
+    data: [{
+      type: "column",
+      color:"#bdebff",
+      dataPoints: [
+        {% for problem in problemchart%}
+        { label: "{{problem.problem}}", y: {{problem.sum}} },
+        {% endfor %}
+      ]
+    }],
+  });
+  chart.render();
+  createPareto();	
+  
+  function createPareto(){
+    var dps = [];
+    var yValue, yTotal = 0, yPercent = 0;
+  
+    for(var i = 0; i < chart.data[0].dataPoints.length; i++)
+      yTotal += chart.data[0].dataPoints[i].y;
+  
+    for(var i = 0; i < chart.data[0].dataPoints.length; i++){
+      yValue = chart.data[0].dataPoints[i].y;
+      yPercent += (yValue / yTotal * 100);
+      dps.push({label: chart.data[0].dataPoints[i].label, y: yPercent});
+    }
+    
+    chart.addTo("data",{type:"line", yValueFormatString: "0.##\"%\"", dataPoints: dps});
+    chart.data[1].set("axisYType", "secondary", false);
+    chart.axisY[0].set("maximum", yTotal);
+    chart.axisY2[0].set("maximum", 100);
+  }
+  
+  }
+  </script>

@@ -1,0 +1,73 @@
+<div id="lossStack" >
+  <canvas id="lossChart" style="height: 300px; width: 100%;"></canvas>
+</div>
+<script>
+  Chart.register(ChartjsPluginStacked100.default);
+  var canvas = document.getElementById("lossChart");
+  var ctx = canvas.getContext("2d");
+
+  var dekidaka = {
+    labels: [
+    "Operation Ratio",
+    ],
+    datasets: [
+      {
+        label: "OR Actual",
+        backgroundColor: "aquamarine",
+        data: [{{or}}],
+      },
+      {
+        label: "Loss",
+        backgroundColor: "#FF6384",
+        data: [{{loss}}]
+      },
+      {
+        label: "Undefined",
+        backgroundColor: "rgba(255, 255, 255, 0.2)",
+        data: [{{undefined}}],
+        borderRadius: 5,
+      },
+    ],
+  };
+  //When uncommenting below line, graph is created without horizontal lines
+  var dekidakaChart = new Chart(ctx, {
+    type: "bar",
+    data: dekidaka,
+    options: {
+      responsive:true,
+      plugins:{
+        stacked100: {
+         enable:true,
+      },
+      legend: {
+        position: "bottom",
+        labels: {
+          color: "white",
+          boxWidth: 20,
+        },
+      },
+      },
+      scales: {
+        x: {
+          ticks: {
+            font: {
+              size: 10,
+              weight: "bold",
+            },
+            color: "white",
+          },
+        },
+        y: {
+          max: 100,
+          ticks: {
+            beginAtZero: true,
+            font: {
+              size: 13,
+              weight: "bold",
+            },
+            color: "white",
+          },
+        },
+      },
+  }});
+</script>

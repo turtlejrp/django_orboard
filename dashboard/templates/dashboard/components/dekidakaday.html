@@ -1,0 +1,94 @@
+<div id="container-dekidakachart">
+  <canvas id="dekidakaChart"></canvas>
+</div>
+<script>
+  var canvas = document.getElementById("dekidakaChart");
+  var ctx = canvas.getContext("2d");
+  var horizonalLinePlugin = {
+    id: "horizontalLine",
+    beforeDraw(chart, args, options){
+      const {ctx,chartArea:{top,right,bottom,left,width,height},scales:{x,y}} = chart;
+      ctx.save()
+
+      ctx.fillStyle = '#90ee90'
+      ctx.fillRect(40,y.getPixelForValue(92),width,3)
+      ctx.fillStyle = 'gold'
+      ctx.fillRect(40,y.getPixelForValue(80),width,3)
+    }
+  };
+
+  var dekidaka = {
+    labels: [
+    "7:35-8:30",
+    "8:30-9:30",
+    "9:40-10:30",
+    "10:30-11:15",
+    "12:15-13:30",
+    "13:30-14:30",
+    "14:40-15:30",
+    "15:30-16:30",
+    "16:50-17:50",
+    "17:50-18:40",
+    "18:50-19:20",
+    ],
+    datasets: [
+      {
+        label: "OR Percentage",
+        fill: false,
+        lineTension: 0.1,
+        backgroundColor: "rgba(75,192,192,0.4)",
+        borderColor: "rgba(75,192,192,1)",
+        data: JSON.parse("{{ORShift}}"),
+      },
+    ],
+  };
+  //When uncommenting below line, graph is created without horizontal lines
+  Chart.register(horizonalLinePlugin);
+  var dekidakaChart = new Chart(ctx, {
+    type: "line",
+    data: dekidaka,
+    plugins: [ChartDataLabels],
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        datalabels: {
+          color: "white",
+          font: { weight: "bold", size: 15 },
+          anchor: "start",
+          align: "start",
+        },
+        legend: {
+          position: "bottom",
+          labels: {
+            color: "white",
+            boxWidth: 20,
+          },
+        },
+      },
+      scales: {
+        x: {
+          ticks: {
+            font: {
+              size: 10,
+              weight: "bold",
+            },
+            color: "white",
+          },
+          barThickness: 20,
+        },
+        y: {
+          max: 100,
+          ticks: {
+            beginAtZero: true,
+            font: {
+              size: 13,
+              weight: "bold",
+            },
+            color: "white",
+          },
+        },
+      },
+    },
+  });
+</script>

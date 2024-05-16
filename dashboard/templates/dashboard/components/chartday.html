@@ -1,0 +1,92 @@
+<div id="container-mychart">
+  <canvas id="myChart"></canvas>
+</div>
+<script>
+  const labels = [
+    "7:35-8:30",
+    "8:30-9:30",
+    "9:40-10:30",
+    "10:30-11:15",
+    "12:15-13:30",
+    "13:30-14:30",
+    "14:40-15:30",
+    "15:30-16:30",
+    "16:50-17:50",
+    "17:50-18:40",
+    "18:50-19:20",
+  ];
+
+  const data = {
+    labels: labels,
+    datasets: [
+      {
+        label: "Actual",
+        backgroundColor: JSON.parse("{{color|escapejs}}"),
+        borderColor: JSON.parse("{{color|escapejs}}"),
+        borderWidth: 2,
+        borderRadius: 5,
+        data: JSON.parse("{{Actual}}"),
+      },
+      {
+        label: "Target",
+        backgroundColor: "rgb(255,255,255,0.5)",
+        borderColor: "rgb(255,255,255,0.5)",
+        borderWidth: 2,
+        borderRadius: 5,
+        data: JSON.parse("{{Plan}}"),
+      },
+    ],
+  };
+
+  const config = {
+    type: "bar",
+    data: data,
+    plugins: [ChartDataLabels],
+    options: {
+      indexAxis: "y",
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        datalabels: {
+          color: "black",
+          font: { weight: "bold", size: 15 },
+          anchor: "end",
+          align: "end",
+          offset: -30,
+        },
+        legend: {
+          position: "bottom",
+          labels: {
+            color: "white",
+            boxWidth: 20,
+          },
+        },
+      },
+      scales: {
+        x: {
+          ticks: {
+            font: {
+              size: 13,
+              weight: "bold",
+            },
+            color: "white",
+          },
+          barThickness: 20,
+        },
+        y: {
+          ticks: {
+            font: {
+              size: 13,
+              weight: "bold",
+            },
+            color: "white",
+          },
+        },
+      },
+    },
+  };
+  const myChart = new Chart(
+    document.getElementById("myChart").getContext("2d"),
+    config
+  );
+</script>

@@ -1,0 +1,106 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta http-equiv="refresh" content="10" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="{% static 'dashboard/home.css' %}" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.0.0/dist/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <title>OR Board</title>
+  </head>
+  <body>
+    <header>
+      <div id="head-container">
+        <h1 id="Line">Line : HVAC 2</h1>
+        <h4 id="Date">Date : <span id="Dateselect">{{DateToday}}</span></h4>
+        <label for="toggle-1" class="toggle-1">
+          <input
+            type="checkbox"
+            name="toggle-1"
+            id="toggle-1"
+            class="toggle-1__input"
+          />
+          <span class="toggle-1__button"></span>
+        </label>
+      </div>
+    </header>
+    <section>
+      <div class="grid-section">
+        <div class="grid-card">
+          <div class="card">
+            <h5 id="card-heading">OR%</h5>
+            <h1 id="ORdata">{{OR_Actual}}%</h1>
+          </div>
+          <div class="card">
+            <h5 id="card-heading">Acc Output</h5>
+            <h1 id="Accdata">{{Output_Actual}}</h1>
+          </div>
+          <div class="card">
+            <h5 id="card-heading">Output Diff</h5>
+            <h1 id="OutputDiff">{{OP_DIFF}}</h1>
+          </div>
+          <div class="card">
+            <h5 id="card-heading">Del. Status</h5>
+            <h1 id="DelStatus">On time</h1>
+          </div>
+        </div>
+        <div class="performance">
+          <h4 class="subheading">Performance/Hr</h4>
+          {% include 'dashboard/components/chart.html' %}
+          <h4 id="Losstime">Loss time : <span id="Loss%">4%</span></h4>
+        </div>
+        <div class="grid-dekidaka">
+          <div id="dekidaka">
+            <h4 class="subheading">Dekidaka (OR target {{OR_Target}}%)</h4>
+            {% include 'dashboard/components/dekidaka.html' %}
+          </div>
+          <div id="container-table">
+            <div id="content-table">
+              <table>
+                <tr>
+                  <th>Result/day</th>
+                  <th>Target</th>
+                  <th>Actual</th>
+                </tr>
+                <tr>
+                  <td>Cycletime</td>
+                  <td>{{STD_Target}}</td>
+                  <td>{{CT_Actual}}</td>
+                </tr>
+                <tr>
+                  <td>OR%</td>
+                  <td>{{OR_Target}}%</td>
+                  <td>{{OR_Actual}}%</td>
+                </tr>
+                <tr>
+                  <td>Output (pcs)</td>
+                  <td>{{Output_Target}}</td>
+                  <td>{{Output_Actual}}</td>
+                </tr>
+              </table>
+            </div>
+            <div id="partno">
+              <h4>Current Part Number:</h4>
+              <h3>{{Cur_Part}}</h3>
+              <h3>Cus:Honda</h3>
+            </div>
+          </div>
+          <div id="OT">
+            <div class="card">
+              <h5 id="card-heading">Overtime</h5>
+              <h1 id="Overtime">2 Hr.</h1>
+            </div>
+            <div class="card recovery">
+              <h5 id="card-heading">Recovery time</h5>
+              <h1 id="Recoverytime">+0.5 Hr.</h1>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </body>
+</html>

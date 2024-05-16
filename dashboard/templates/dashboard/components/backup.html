@@ -1,0 +1,292 @@
+from multiprocessing import context
+from django.http.response import HttpResponse
+from django.db.models import Count
+from django.shortcuts import render
+from .models import Cycletime, PartNO,Track
+from datetime import time, date, datetime
+from django.core.serializers.json import DjangoJSONEncoder
+import json
+import ast
+
+Dayshift = {1: ["07:35", "08:30"], 2: ["08:30", "09:30"], 3: ["09:40", "10:30"], 4: ["10:30", "11:30"], 5: ["12:30", "13:30"], 6: ["13:30", "14:30"],
+            7: ["14:40", "15:30"], 8: ["15:30", "16:30"], 9: ["16:50", "17:50"], 10: ["17:50", "18:50"], 11: ["18:50", "19:15"]}
+Nightshift = {1: ["19:35", "20:30"], 2: ["20:30", "21:20"], 3: ["21:30", "22:30"], 4: ["22:30", "23:30"], 5: ["00:20", "01:30"], 6: ["01:30", "02:20"],
+              7: ["02:30", "03:30"], 8: ["03:30", "04:30"], 9: ["04:50", "05:50"], 10: ["05:50", "06:50"], 11: ["06:50", "07:20"]}
+shifttime = [3300, 3600, 3000, 3600, 3600, 3600, 3000, 3300, 3600, 3600, 1500]
+
+# Create your views here.
+def orboardday(request):
+    if request.method == 'POST' :
+        dateselect = request.POST.get('date')
+        CurrentDate =  datetime.strptime(dateselect, "%Y-%m-%d")
+        DateToday = CurrentDate.strftime("%d %B %Y")
+        if DateToday != date.today().strftime("%d %B %Y"):
+            try:
+                partgroup = Track.objects.get(date=CurrentDate,shift='day')
+                OR_Actual = partgroup.orActual
+                OR_Target= partgroup.orTarget
+                Output_Actual= partgroup.accualOutput
+                Output_Target= partgroup.targetOutput
+                OP_DIFF= partgroup.outputDiff
+                STD_Target= partgroup.stdTarget
+                CT_Actual= partgroup.stdActual
+                lastpart= partgroup.lastpast
+                Plan= json.loads(partgroup.plan)
+                Actual= json.loads(partgroup.actual)
+                ORshift= json.loads(partgroup.orShift)
+                Colorchart= ast.literal_eval(partgroup.color)
+            except:
+                return render(request, "dashboard/err.html")
+        else:
+            CurrentTime = datetime.now().time()
+            sec = CurrentTime.hour*3600 + CurrentTime.minute*60 + CurrentTime.second
+            OR_Actual,  OR_Target,  Output_Actual,  Output_Target, OP_DIFF, STD_Target,  CT_Actual, lastpart, Plan, Actual,ORshift, Colorchart = calORday(CurrentDate,sec)
+    else:
+        CurrentDate = date.today()
+        DateToday = CurrentDate.strftime("%d %B %Y")
+        CurrentTime = datetime.now().time()
+        sec = CurrentTime.hour*3600 + CurrentTime.minute*60 + CurrentTime.second
+        OR_Actual,  OR_Target,  Output_Actual,  Output_Target, OP_DIFF, STD_Target,  CT_Actual, lastpart, Plan, Actual,ORshift, Colorchart = calORday(CurrentDate,sec)
+
+    data_yesterday = Cycletime.objects.filter(create_at_date__lt = date.today())
+    if data_yesterday.exists():
+        try:
+            cycletime_per_shift = data_yesterday.values('create_at_date').filter(create_at_time__gte="07:35",create_at_time__lte="19:20").annotate(dcount=Count('create_at_date'))
+        except:
+            cycletime_per_shift = data_yesterday.values('create_at_date').filter(create_at_time__gte="19:35",create_at_time__lte="07:20").annotate(dcount=Count('create_at_date'))
+            tCurrentDate = cycletime_per_shift[0]['create_at_date']
+            tDatetoday = cycletime_per_shift[0]['create_at_date'].strftime("%d %B %Y")
+            tOR_Actual,  tOR_Target,  tOutput_Actual,  tOutput_Target, tOP_DIFF, tSTD_Target,  tCT_Actual, tlastpart, tPlan, tActual,tORshift, tColorchart = calORday(tCurrentDate,69600)
+            t = Track(orActual = tOR_Actual,orTarget =tOR_Target,accualOutput = tOutput_Actual,targetOutput = tOutput_Target,outputDiff = tOP_DIFF,stdTarget = tSTD_Target,stdActual = tCT_Actual,
+            lastpast = tlastpart,plan = tPlan,actual = tActual,orShift = tORshift,color = tColorchart,date=tCurrentDate,shift='day')
+            t.save()
+            data_yesterday.delete() 
+
+
+    context = {'OR_Actual': OR_Actual, 'OR_Target': OR_Target, 'Output_Actual': Output_Actual, 'Output_Target': Output_Target,
+                'OP_DIFF': OP_DIFF, 'STD_Target': STD_Target, 'CT_Actual': CT_Actual, 'Cur_Part': lastpart, 'Plan': json.dumps(Plan, cls=DjangoJSONEncoder),
+                'Actual': json.dumps(Actual, cls=DjangoJSONEncoder), 'ORShift': json.dumps(ORshift, cls=DjangoJSONEncoder),
+                'color': json.dumps(Colorchart, cls=DjangoJSONEncoder), 'DateToday': DateToday,'shift':'orboardnight'}
+    return render(request, 'dashboard/home.html', context)
+
+def calORday(CurrentDate,sec):
+    Target_Time = 0
+    Plan = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    Actual = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    Colorchart = list()
+    ORshift = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    if 27300 <= sec <= 30600:  # 7.35-8.30
+        shift = 1
+        startshift = 27300
+    elif 30600 <= sec <= 34200:  # 8.30-9.30
+        shift = 2
+        startshift = 27300
+    elif 34200 <= sec <= 37800:  # 9.40-10.30
+        shift = 3
+        startshift = 27900
+    elif 37800 <= sec <= 41400:  # 10.30-11.30
+        shift = 4
+        startshift = 27900
+    elif 41400 <= sec <= 48600:  # 12.30-13.30
+        shift = 5
+        startshift = 31500
+    elif 48600 <= sec <= 52200:  # 13.30-14.30
+        shift = 6
+        startshift = 31500
+    elif 52200 <= sec <= 55800:  # 14.40-15.30
+        shift = 7
+        startshift = 32100
+    elif 55800 <= sec <= 59400:  # 15.30-16.30
+        shift = 8
+        startshift = 32100
+    elif 59400 <= sec <= 64200:  # 16.50-17.50
+        shift = 9
+        startshift = 33300
+    elif 64200 <= sec <= 67800:  # 17.50-18.50
+        shift = 10
+        startshift = 33300
+    else :  # 18.50-19.20
+        shift = 11
+        startshift = 33300
+    ACC_Worktime = sec - startshift
+    partgroup = Cycletime.objects.values('partno').annotate(
+        dcount=Count('partno')).filter(create_at_date=CurrentDate,create_at_time__gte="07:30",create_at_time__lte="19:20")
+    Output_Actual = Cycletime.objects.filter(
+        create_at_date=CurrentDate,create_at_time__gte="07:30",create_at_time__lte="19:20").count()
+    lastpart = Cycletime.objects.last().partno
+    for a in partgroup:
+        try:
+            ct = PartNO.objects.get(partnumber=a['partno'])
+            Target_Time += ct.cycletime*a['dcount']
+        except:
+            Target_Time += 60*a['dcount']
+    STD_Target = round(Target_Time/Output_Actual, 2)
+    CT_Actual = round(ACC_Worktime/Output_Actual, 2)
+    Output_Target = int(ACC_Worktime/STD_Target)
+    OP_DIFF = int(Output_Target-Output_Actual)
+    OR_Actual = round((Target_Time/ACC_Worktime)*100, 2)
+    OR_Target = 92
+    for a in range(shift):
+        part_per_shift = Cycletime.objects.filter(
+            create_at_date=CurrentDate, create_at_time__range=[Dayshift[a+1][0], Dayshift[a+1][1]])
+        Actual[a] += part_per_shift.count()
+        cycletime_per_shift = Cycletime.objects.values('partno').annotate(dcount=Count('partno')).filter(
+            create_at_date=CurrentDate, create_at_time__range=[Dayshift[a+1][0], Dayshift[a+1][1]])
+        for b in cycletime_per_shift:
+            try:
+                ctshift = PartNO.objects.get(partnumber=b['partno'])
+                ORshift[a] += round((ctshift.cycletime *
+                                    b['dcount']*100/shifttime[a]), 2)
+            except:
+                ORshift[a] += (60*b['dcount']*100/shifttime[a])
+        Plan[a] += int(shifttime[a]/STD_Target)
+        if Actual[a] >= Plan[a]:
+            Colorchart.append("aquamarine")
+        else:
+            Colorchart.append("rgb(255, 99, 132)")
+    return OR_Actual,  OR_Target,  Output_Actual,  Output_Target, OP_DIFF, STD_Target,  CT_Actual, lastpart, Plan, Actual,ORshift, Colorchart
+
+
+
+
+def orboardnight(request):
+    if request.method == 'POST' :
+        print("post")
+        dateselect = request.POST.get('date')
+        CurrentDate =  datetime.strptime(dateselect, "%Y-%m-%d")
+        DateToday = CurrentDate.strftime("%d %B %Y")
+        if DateToday != date.today().strftime("%d %B %Y"):
+            try:
+                partgroup = Track.objects.get(date=CurrentDate)
+                OR_Actual = partgroup.orActual
+                OR_Target= partgroup.orTarget
+                Output_Actual= partgroup.accualOutput
+                Output_Target= partgroup.targetOutput
+                OP_DIFF= partgroup.outputDiff
+                STD_Target= partgroup.stdTarget
+                CT_Actual= partgroup.stdActual
+                lastpart= partgroup.lastpast
+                Plan= json.loads(partgroup.plan)
+                Actual= json.loads(partgroup.actual)
+                ORshift= json.loads(partgroup.orShift)
+                Colorchart= ast.literal_eval(partgroup.color)
+            except:
+                return render(request, "dashboard/err.html")
+        else:
+            CurrentTime = datetime.now().time()
+            sec = CurrentTime.hour*3600 + CurrentTime.minute*60 + CurrentTime.second
+            OR_Actual,  OR_Target,  Output_Actual,  Output_Target, OP_DIFF, STD_Target,  CT_Actual, lastpart, Plan, Actual,ORshift, Colorchart = calORnight(CurrentDate, sec)
+    else:
+        print("get")
+        CurrentDate = date.today()
+        DateToday = CurrentDate.strftime("%d %B %Y")
+        CurrentTime = datetime.now().time()
+        sec = CurrentTime.hour*3600 + CurrentTime.minute*60 + CurrentTime.second
+        OR_Actual,  OR_Target,  Output_Actual,  Output_Target, OP_DIFF, STD_Target,  CT_Actual, lastpart, Plan, Actual,ORshift, Colorchart = calORnight(CurrentDate, sec)
+
+    data_yesterday = Cycletime.objects.filter(create_at_date__lt = date.today())
+    if data_yesterday.exists():
+        cycletime_per_shift = data_yesterday.values('create_at_date').annotate(dcount=Count('create_at_date'))
+        tCurrentDate = cycletime_per_shift[0]['create_at_date']
+        tDatetoday = cycletime_per_shift[0]['create_at_date'].strftime("%d %B %Y")
+        tOR_Actual,  tOR_Target,  tOutput_Actual,  tOutput_Target, tOP_DIFF, tSTD_Target,  tCT_Actual, tlastpart, tPlan, tActual,tORshift, tColorchart = calORnight(tCurrentDate,69600)
+        t = Track(orActual = tOR_Actual,orTarget =tOR_Target,accualOutput = tOutput_Actual,targetOutput = tOutput_Target,outputDiff = tOP_DIFF,stdTarget = tSTD_Target,stdActual = tCT_Actual,
+            lastpast = tlastpart,plan = tPlan,actual = tActual,orShift = tORshift,color = tColorchart,date=tCurrentDate,shift='night')
+        t.save()
+        data_yesterday.delete()    
+
+    context = {'OR_Actual': OR_Actual, 'OR_Target': OR_Target, 'Output_Actual': Output_Actual, 'Output_Target': Output_Target,
+                'OP_DIFF': OP_DIFF, 'STD_Target': STD_Target, 'CT_Actual': CT_Actual, 'Cur_Part': lastpart, 'Plan': json.dumps(Plan, cls=DjangoJSONEncoder),
+                'Actual': json.dumps(Actual, cls=DjangoJSONEncoder), 'ORShift': json.dumps(ORshift, cls=DjangoJSONEncoder),
+                'color': json.dumps(Colorchart, cls=DjangoJSONEncoder), 'DateToday': DateToday,'shift':'orboardday'}
+    return render(request, 'dashboard/home.html', context)
+
+
+
+def calORnight(CurrentDate,sec):
+    Target_Time = 0
+    Plan = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    Actual = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    Colorchart = list()
+    ORshift = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    if 70500 <= sec <= 73800:  # 19.35-20.30
+        shift = 1
+        startshift = 70500
+    elif 73800 <= sec <= 77400:  # 20.30-21.30
+        shift = 2
+        startshift = 70500
+    elif 78000 <= sec <= 81600:  # 21.40-22.30
+        shift = 3
+        startshift = 71100
+    elif 81600 <= sec <= 85200:  # 22.30-23.30
+        shift = 4
+        startshift = 71100
+    elif 1800 <= sec <= 5400:  # 00.30-01.30
+        shift = 5
+        startshift = 1800
+    elif 5400 <= sec <= 8000:  # 01.30-02.30
+        shift = 6
+        startshift = 1800
+    elif 8600 <= sec <= 11600:  # 02.40-03.30
+        shift = 7
+        startshift = 2400
+    elif 11600 <= sec <= 15200:  # 03.30-04.30
+        shift = 8
+        startshift = 2400
+    elif 16400 <= sec <= 21000:  # 04.50-05.50
+        shift = 9
+        startshift = 3600
+    elif 21000 <= sec <= 24600:  # 05.50-06.50
+        shift = 10
+        startshift = 3600
+    else:  # 06.50-07.20
+        shift = 11
+        startshift = 3600
+    if sec > 70000:
+        ACC_Worktime = sec - startshift
+        partgroup = Cycletime.objects.values('partno').annotate(
+            dcount=Count('partno')).filter(create_at_date=CurrentDate,create_at_time__gte="19:30",create_at_time__lte="24:00")
+        Output_Actual = Cycletime.objects.filter(
+        create_at_date=CurrentDate,create_at_time__gte="19:30",create_at_time__lte="24:00").count()
+    else:
+        ACC_Worktime = sec - startshift + 14100
+        partgroup = Cycletime.objects.values('partno').annotate(
+            dcount=Count('partno')).filter(create_at_date=CurrentDate,create_at_time__gte="00:00",create_at_time__lte="07:20")
+        Output_Actual = Cycletime.objects.filter(
+            create_at_date=CurrentDate,create_at_time__gte="00:00",create_at_time__lte="07:20").count()
+    lastpart = Cycletime.objects.last().partno
+    for a in partgroup:
+        try:
+            ct = PartNO.objects.get(partnumber=a['partno'])
+            Target_Time += ct.cycletime*a['dcount']
+        except:
+            Target_Time += 60*a['dcount']
+    STD_Target = round(Target_Time/Output_Actual, 2)
+    CT_Actual = round(ACC_Worktime/Output_Actual, 2)
+    Output_Target = int(ACC_Worktime/STD_Target)
+    OP_DIFF = int(Output_Target-Output_Actual)
+    OR_Actual = round((Target_Time/ACC_Worktime)*100, 2)
+    OR_Target = 92
+    for a in range(shift):
+        part_per_shift = Cycletime.objects.filter(
+            create_at_date=CurrentDate, create_at_time__range=[Nightshift[a+1][0], Nightshift[a+1][1]])
+        Actual[a] += part_per_shift.count()
+        cycletime_per_shift = Cycletime.objects.values('partno').annotate(dcount=Count('partno')).filter(
+            create_at_date=CurrentDate, create_at_time__range=[Nightshift[a+1][0], Nightshift[a+1][1]])
+        for b in cycletime_per_shift:
+            try:
+                ctshift = PartNO.objects.get(partnumber=b['partno'])
+                ORshift[a] += round((ctshift.cycletime *
+                                    b['dcount']*100/shifttime[a]), 2)
+            except:
+                ORshift[a] += (60*b['dcount']*100/shifttime[a])
+        Plan[a] += int(shifttime[a]/STD_Target)
+        if Actual[a] >= Plan[a]:
+            Colorchart.append("aquamarine")
+        else:
+            Colorchart.append("rgb(255, 99, 132)")
+    return OR_Actual,  OR_Target,  Output_Actual,  Output_Target, OP_DIFF, STD_Target,  CT_Actual, lastpart, Plan, Actual,ORshift, Colorchart
+
+
+def err(request):
+    return render(request, "dashboard/err.html")
