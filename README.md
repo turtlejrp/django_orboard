@@ -15,6 +15,7 @@ also can report and analysis lost.
 
 - Python 3.12
 - Django 5.0.x
+- Docker
 - SQLite (default) or any other database (PostgreSQL, MySQL, etc.)
 - Other dependencies listed in `requirements.txt`
 
@@ -26,31 +27,21 @@ also can report and analysis lost.
    cd ORBOARD
    ```
 
-2.**Install Requirement Package**
+2.**Docker Build**
    ```
-   pip install -r requirements.txt
+   docker build -t django-orboard:latest .
    ```
 
-3.**Apply the database migrations:**
+3.**Run Docker Images**
   ```
-  python manage.py makemigrations
-  python manage.py migrate
-  ```
-
-4.**Create a superuser:**
-  ```
-  python manage.py createsuperuser
+  docker run -d -p 8000:8000 django-orboard-latest
   ```
 
-5.**Collect static files:**
+4.**Open Web Browser**
   ```
-  python manage.py collectstatic
+  http://127.0.0.1:8000/
   ```
 
-6.**Run the development server:**
-  ```
-  python manage.py runserver
-  ```
 
 ## Application Usage
 

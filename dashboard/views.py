@@ -85,7 +85,7 @@ def orboard(request):
             'partno': partno,
             'create_at_time': current_datetime.time(),
         })
-        current_datetime += timedelta(minutes=1)
+        current_datetime += timedelta(minutes=2)
     
     
     for cycletime_data in cycle_time:
@@ -276,6 +276,10 @@ def calORnight(CurrentDate, sec):
         CT_Actual = round(ACC_Worktime/Output_Actual, 2)
     Output_Target = int(ACC_Worktime/STD_Target)
     OP_DIFF = int(Output_Actual-Output_Target)
+    if OP_DIFF >= 0 :
+        status = "ON TIME"
+    else:
+        status = "DELAY"
     if shift < 5:
         for a in range(shift):
             Day = CurrentDate
@@ -328,4 +332,4 @@ def calORnight(CurrentDate, sec):
     else:
         OR_Actual = round((Target_Time/abs(ACC_Worktime))*100, 2)
     OR_Target = 92
-    return OR_Actual,  OR_Target,  Output_Actual,  Output_Target, OP_DIFF, STD_Target,  CT_Actual, lastpart, Plan, Actual, ORshift, Colorchart,losssum
+    return OR_Actual,  OR_Target,  Output_Actual,  Output_Target, OP_DIFF, STD_Target,  CT_Actual, lastpart, Plan, Actual, ORshift, Colorchart,losssum,status
