@@ -89,5 +89,30 @@ after change Database run
   python manage.py makemigrations
   python manage.py migrate
 ```
+**Dummy Data in dasnboard/views.py**
+In case of connecting to real database please delete this part
 
+```
+# Demo Data part
+    partno = '1234'
+    start_time = datetime.strptime('08:15:00', '%H:%M:%S').time()
+    current_time = datetime.now().time()
+    start_datetime = datetime.combine(datetime.today(), start_time)
+    end_datetime = datetime.combine(datetime.today(), current_time)
+    cycle_time = []
+        
+    current_datetime = start_datetime
+
+    while current_datetime <= end_datetime:
+        cycle_time.append({
+            'partno': partno,
+            'create_at_time': current_datetime.time(),
+        })
+        current_datetime += timedelta(minutes=1)
+    
+    
+    for cycletime_data in cycle_time:
+            cycletime = Cycletime.objects.get_or_create(**cycletime_data)
+    # Demo Data part
+```
 

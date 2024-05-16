@@ -70,7 +70,7 @@ def orboard(request):
     
 
     
-    # Demo Data can delete if want to using real app
+    # Demo Data part
     partno = '1234'
     start_time = datetime.strptime('08:15:00', '%H:%M:%S').time()
     current_time = datetime.now().time()
@@ -90,7 +90,7 @@ def orboard(request):
     
     for cycletime_data in cycle_time:
             cycletime = Cycletime.objects.get_or_create(**cycletime_data)
-
+    # Demo Data part
 
     context = {'OR_Actual': OR_Actual, 'OR_Target': OR_Target, 'Output_Actual': Output_Actual, 'Output_Target': Output_Target,
                'OP_DIFF': OP_DIFF, 'STD_Target': STD_Target, 'CT_Actual': CT_Actual, 'Cur_Part': lastpart, 'Plan': json.dumps(Plan, cls=DjangoJSONEncoder),
